@@ -225,7 +225,7 @@ function vHistory(){
     return `<details class="card"><summary><span class="big">${dShow(o.date)}</span><span class="meta">${ls.length} פריטים${ov?` · ${ov} מעל התקן`:''}</span></summary>
     <table><thead><tr><th>פריט</th><th class="n">יש</th><th class="n">תקן</th><th class="n">הוזמן</th></tr></thead><tbody>
     ${ls.map(l=>`<tr><td>${esc(l.name)}</td><td class="n">${fmt(l.stock)}</td><td class="n">${fmt(l.std)}</td><td class="n" style="${l.suggested!=null&&l.order>l.suggested+1e-9?'color:var(--over);font-weight:700':''}">${fmt(l.order)}</td></tr>`).join('')}
-    </tbody></table><div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-copy="${o.id}">העתק טקסט הזמנה</button><button class="btn sm ghost" data-del="${o.id}">מחק</button></div></details>`}).join('');
+    </tbody></table><div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-xl="${o.id}">הורד אקסל</button><button class="btn sm ghost" data-copy="${o.id}">העתק טקסט</button><button class="btn sm ghost" data-del="${o.id}">מחק</button></div></details>`}).join('');
 }
 function vItems(){
   return `<div class="note">כאן משנים שם, תקן ויחידה. התקן הוא כמה צריך להיות במחסן אחרי הזמנה.</div>
@@ -265,6 +265,24 @@ function confirmOver(it,o,s){
   $('#yes').onclick=()=>{L(it.id).order=o;L(it.id).ok=o;saveDraftSoon();onClose=null;closeModal();refreshRow(it.id)};
   $('#no').onclick=()=>closeModal();
 }
+let xlLib=null;
+function loadXl(){return xlLib||(xlLib=new Promise((ok,no)=>{const s=document.createElement('script');s.src='https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js';s.onload=()=>ok(window.XLSX);s.onerror=()=>{xlLib=null;no()};document.head.appendChild(s)}))}
+async function downloadXl(date,lines){
+  let X;try{X=await loadXl()}catch(e){toast('לא הצלחתי לטעון את רכיב האקסל. צריך חיבור לאינטרנט בפעם הראשונה.');return}
+  const by={};(lines||[]).forEach(l=>by[l.id]=l);
+  const rows=[['הזמנות אר-אל — '+dShow(date)],['מוצר','תקן','יחידה','מלאי','להזמין']];
+  const ids=items.map(i=>i.id);(lines||[]).forEach(l=>{if(!ids.includes(l.id))ids.push(l.id)});
+  ids.forEach(id=>{const it=items.find(i=>i.id===id)||{},l=by[id]||{};
+    rows.push([l.name||it.name,l.std??it.std??'',l.unit||it.unit||'',l.stock??'',l.order>0?l.order:''])});
+  const n=(lines||[]).filter(l=>l.order>0).length;rows.push([]);rows.push(['סה"כ פריטים להזמנה',n]);
+  const ws=X.utils.aoa_to_sheet(rows);ws['!cols']=[{wch:52},{wch:8},{wch:8},{wch:8},{wch:10}];ws['!merges']=[{s:{r:0,c:0},e:{r:0,c:4}}];
+  const wb=X.utils.book_new();wb.Workbook={Views:[{RTL:true}]};X.utils.book_append_sheet(wb,ws,'הזמנה');
+  const buf=X.write(wb,{bookType:'xlsx',type:'array'});
+  const name='הזמנה אר-אל '+dShow(date).replace(/\./g,'-')+'.xlsx';
+  const file=new File([buf],name,{type:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'});
+  try{if(navigator.canShare&&navigator.canShare({files:[file]})){await navigator.share({files:[file],title:name});return}}catch(e){if(e&&e.name==='AbortError')return}
+  const a=document.createElement('a');a.href=URL.createObjectURL(file);a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},4000);
+}
 function orderText(date,lines){return `הזמנה אר-אל ${dShow(date)}\n`+lines.filter(l=>l.order>0).map(l=>`• ${l.name} — ${fmt(l.order)}${l.unit?' '+l.unit:''}`).join('\n')}
 async function copyText(t){try{await navigator.clipboard.writeText(t);openModal(`<h2>הועתק</h2><p>טקסט ההזמנה הועתק. אפשר להדביק לספק בוואטסאפ או במייל.</p><div class="acts"><button class="btn" data-close>סגור</button></div>`)}
   catch(e){openModal(`<h2>טקסט ההזמנה</h2><p class="meta">סמן והעתק:</p><textarea readonly>${esc(t)}</textarea><div class="acts"><button class="btn" data-close>סגור</button></div>`)}}
@@ -276,16 +294,17 @@ function summary(){
   const un=ord.filter(l=>l.suggested!=null&&l.order>l.suggested+1e-9&&l.ok!==l.order);
   const show=()=>openModal(`<h2>סיכום הזמנה · ${dShow(draft.date)}</h2>
     <table><thead><tr><th>פריט</th><th class="n">כמות</th></tr></thead><tbody>${ord.map(l=>`<tr><td>${esc(l.name)}</td><td class="n" style="${l.suggested!=null&&l.order>l.suggested+1e-9?'color:var(--over);font-weight:700':''}">${fmt(l.order)}${l.unit?' '+esc(l.unit):''}</td></tr>`).join('')}</tbody></table>
-    <div class="acts"><button class="btn" id="doSave">שמור הזמנה</button><button class="btn ghost" id="doCopy">העתק טקסט</button><button class="btn ghost" data-close>חזור לעריכה</button></div>`);
+    <div class="acts"><button class="btn" id="doSave">שמור הזמנה</button><button class="btn ghost" id="doXl">הורד אקסל</button><button class="btn ghost" id="doCopy">העתק טקסט</button><button class="btn ghost" data-close>חזור לעריכה</button></div>`);
   const bind=()=>{
     $('#doCopy').onclick=()=>copyText(orderText(draft.date,ord));
+    $('#doXl').onclick=()=>downloadXl(draft.date,lines);
     $('#doSave').onclick=async()=>{
       if(!local&&!canWrite){toast('אין הרשאת שמירה.');return}
       const o={date:draft.date,ts:Date.now(),lines:lines.filter(l=>l.stock!=null||l.order!=null).map(({ok,...r})=>r)};
       try{await addOrder(o)}catch(e){writeErr(e);return}
       draft={date:today(),lines:{}};clearTimeout(draftTimer);await saveDraft();onClose=null;closeModal();
-      openModal(`<h2>ההזמנה נשמרה</h2><p>${ord.length} פריטים נשמרו בהיסטוריה. הספירה הבאה תתחיל ריקה, והממוצעים יתעדכנו.</p><div class="acts"><button class="btn" id="cp2">העתק טקסט לספק</button><button class="btn ghost" data-close>סגור</button></div>`);
-      $('#cp2').onclick=()=>copyText(orderText(o.date,ord));render()};
+      openModal(`<h2>ההזמנה נשמרה</h2><p>${ord.length} פריטים נשמרו בהיסטוריה. הספירה הבאה תתחיל ריקה, והממוצעים יתעדכנו.</p><div class="acts"><button class="btn" id="xl2">הורד אקסל</button><button class="btn ghost" id="cp2">העתק טקסט לספק</button><button class="btn ghost" data-close>סגור</button></div>`);
+      $('#cp2').onclick=()=>copyText(orderText(o.date,ord));$('#xl2').onclick=()=>downloadXl(o.date,o.lines);render()};
   };
   if(un.length){
     openModal(`<h2>${un.length} פריטים מעל התקן</h2><p>לוודא שאתה רוצה להזמין יותר:</p>
@@ -315,6 +334,7 @@ $('#main').addEventListener('click',e=>{
   const b=e.target.closest('button');if(!b)return;
   if(b.dataset.f){filter=b.dataset.f;render()}
   else if(b.dataset.rec){const it=items.find(x=>x.id===b.dataset.rec);it.std=+b.dataset.v;saveItems();render()}
+  else if(b.dataset.xl){const o=orders.find(x=>x.id===b.dataset.xl);downloadXl(o.date,o.lines)}
   else if(b.dataset.copy){const o=orders.find(x=>x.id===b.dataset.copy);copyText(orderText(o.date,o.lines))}
   else if(b.dataset.del){const id=b.dataset.del;openModal(`<h2>למחוק את ההזמנה?</h2><p>היא תוסר גם מחישוב הממוצעים.</p><div class="acts"><button class="btn" id="yd">מחק</button><button class="btn ghost" data-close>ביטול</button></div>`);$('#yd').onclick=()=>{closeModal();delOrder(id)}}
   else if(b.dataset.rm){const id=b.dataset.rm,it=items.find(x=>x.id===id);openModal(`<h2>למחוק פריט?</h2><p>${esc(it.name)}</p><div class="acts"><button class="btn" id="yr">מחק</button><button class="btn ghost" data-close>ביטול</button></div>`);$('#yr').onclick=()=>{items=items.filter(x=>x.id!==id);closeModal();saveItems()}}
@@ -332,6 +352,7 @@ local=true;{const i=LS('items');items=i&&Array.isArray(i.items)?i.items:DEFAULT_
 orders=LS('orders')||[];draft=LS('draft')||draft;
 if(!Object.keys(draft.lines||{}).length)draft.date=today();
 render();
+setTimeout(()=>loadXl().catch(()=>{}),1500);
 if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
 </script>
