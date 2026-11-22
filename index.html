@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>הזמנות אר-אל</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="הזמנות">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="theme-color" content="#1f2328">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Rubik:wght@400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* VOICE: practical, calm, fast to use with one thumb in a storeroom.
+   IDEA: a warehouse count slip on a clipboard: count, standard, order.
+   PICTURE: the count list itself, each row a slip line with a live order figure.
+   COLOUR and TYPE: charcoal band, white slips, safety-yellow accent; Rubik.
+   LAYOUT: sticky header + tabs, one column of rows, sticky save bar. */
+:root{color-scheme:light dark;
+--bg:light-dark(#eef0f2,#111417);--card:light-dark(#fff,#1b1f24);--ink:light-dark(#16191d,#eef1f4);
+--mute:light-dark(#5d6670,#9aa4ae);--line:light-dark(#dde1e5,#2b3138);--band:light-dark(#1f2328,#0a0c0e);
+--acc:#ffc21a;--accInk:#1f1a00;--over:light-dark(#c2410c,#ff8a4c);--overBg:light-dark(#fff1e8,#3a2114);
+--under:light-dark(#1d5fbf,#7fb0ff);--underBg:light-dark(#eaf2ff,#14243d);--ok:light-dark(#2f6b3a,#7fd08d)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 Rubik,system-ui,sans-serif;overflow-x:clip;padding-bottom:96px}
+button,input{font:inherit;color:inherit}
+header{background:var(--band);color:#fff;position:sticky;top:0;z-index:5}
+.top{max-width:860px;margin:auto;padding:calc(14px + env(safe-area-inset-top)) 16px 0;display:flex;align-items:end;gap:12px;flex-wrap:wrap}
+h1{margin:0;font-size:26px;line-height:1.1;font-weight:800}
+h1 span{color:var(--acc)}
+.sub{color:#b8c0c8;font-size:14px;margin-inline-start:auto}
+nav{max-width:860px;margin:auto;display:flex;gap:2px;padding:10px 8px 0;overflow-x:auto}
+nav a{flex:none;color:#c9d0d6;text-decoration:none;padding:10px 14px;border-radius:10px 10px 0 0;font-weight:500;min-height:44px}
+nav a.on{background:var(--bg);color:var(--ink)}
+main{max-width:860px;margin:auto;padding:14px 12px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px}
+.search{flex:1 1 220px;height:46px;border:1px solid var(--line);border-radius:12px;background:var(--card);padding:0 14px;font-size:16px}
+.chip{height:40px;padding:0 14px;border-radius:20px;border:1px solid var(--line);background:var(--card);cursor:pointer;white-space:nowrap}
+.chip.on{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.note{background:var(--card);border:1px dashed var(--line);border-radius:12px;padding:12px 14px;color:var(--mute);font-size:14px;margin-bottom:12px}
+.row{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px 14px;margin-bottom:8px;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:6px 12px;align-items:center}
+.row.has{border-inline-start:5px solid var(--acc)}
+.name{font-weight:500;line-height:1.3}
+.meta{font-size:13px;color:var(--mute)}
+.nums{display:flex;gap:8px;align-items:end}
+.f{display:grid;gap:2px;text-align:center;font-size:12px;color:var(--mute)}
+.f input{width:72px;height:46px;border:1px solid var(--line);border-radius:10px;background:var(--bg);text-align:center;font-size:18px;font-weight:500}
+.f input.ord{border-color:var(--acc);border-width:2px}
+.f input:focus-visible,.search:focus-visible,button:focus-visible{outline:3px solid var(--acc);outline-offset:1px}
+.tag{grid-column:1/-1;font-size:13px;display:flex;gap:6px;flex-wrap:wrap}
+.pill{padding:2px 9px;border-radius:20px;white-space:nowrap}
+.pill.over{background:var(--overBg);color:var(--over)}.pill.under{background:var(--underBg);color:var(--under)}
+.pill.info{background:var(--bg);color:var(--mute)}
+.save{position:fixed;inset-inline:0;bottom:0;background:var(--band);color:#fff;z-index:6}
+.save div{max-width:860px;margin:auto;padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;gap:12px;align-items:center}
+.save b{font-size:20px;color:var(--acc)}
+.btn{min-height:46px;padding:0 18px;border-radius:12px;border:0;background:var(--acc);color:var(--accInk);font-weight:700;cursor:pointer}
+.btn.ghost{background:transparent;color:inherit;border:1px solid var(--line)}
+.btn.sm{min-height:38px;padding:0 12px;font-size:14px}
+.save .btn{margin-inline-start:auto}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:10px}
+.card h3{margin:0 0 4px;font-size:17px}
+.big{font-size:28px;font-weight:800;line-height:1}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;margin:10px 0}
+.stats div{background:var(--bg);border-radius:10px;padding:8px;text-align:center;font-size:12px;color:var(--mute)}
+.stats b{display:block;font-size:18px;color:var(--ink)}
+.meter{height:10px;background:var(--bg);border-radius:6px;position:relative;margin:8px 0 4px}
+.meter i{position:absolute;inset-block:0;inset-inline-start:0;border-radius:6px;background:var(--acc)}
+.meter s{position:absolute;inset-block:-4px;width:2px;background:var(--ink)}
+table{width:100%;border-collapse:collapse;font-size:14px}
+td,th{padding:6px 4px;border-bottom:1px solid var(--line);text-align:start}
+td.n,th.n{text-align:end;white-space:nowrap}
+details summary{cursor:pointer;list-style:none;display:flex;gap:10px;align-items:center;min-height:44px}
+.edit{display:grid;grid-template-columns:minmax(0,1fr) 80px 90px 44px;gap:6px;margin-bottom:6px}
+.edit input{height:44px;border:1px solid var(--line);border-radius:10px;background:var(--card);padding:0 10px;font-size:16px}
+.x{width:44px;height:44px;border-radius:10px;border:1px solid var(--line);background:var(--card);cursor:pointer}
+.modal{position:fixed;inset:0;background:#0009;display:none;align-items:end;justify-content:center;z-index:20;padding:12px}
+.modal.on{display:flex}
+.sheet{background:var(--card);border-radius:18px;padding:18px;max-width:520px;width:100%;max-height:85vh;overflow:auto}
+.sheet h2{margin:0 0 8px;font-size:22px;line-height:1.2}
+.sheet .acts{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap}
+.sheet .acts .btn{flex:1 1 140px}
+textarea{width:100%;min-height:140px;border:1px solid var(--line);border-radius:10px;background:var(--bg);padding:10px;font:14px/1.5 Rubik,sans-serif}
+.empty{text-align:center;color:var(--mute);padding:40px 10px}
+@media(max-width:600px){.row{grid-template-columns:minmax(0,1fr)}.nums{justify-content:flex-start}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.edit{grid-template-columns:minmax(0,1fr) 70px 44px}.edit .u{display:none}.sub{display:none}}
+@media(prefers-reduced-motion:no-preference){.sheet{animation:up .18s ease-out}@keyframes up{from{transform:translateY(20px);opacity:0}}}
+</style>
+</head>
+<body>
+<header>
+  <div class="top"><h1>הזמנות <span>אר-אל</span></h1><div class="sub" id="sub">מחסן רמה״ח</div></div>
+  <nav id="nav"><a href="#count">ספירה והזמנה</a><a href="#trends">ממוצעים ומגמות</a><a href="#history">היסטוריה</a><a href="#items">פריטים ותקנים</a></nav>
+</header>
+<main id="main"><div class="empty">טוען…</div></main>
+<div class="save" id="saveBar" hidden><div><span>להזמנה: <b id="cnt">0</b> פריטים</span><button class="btn" id="saveBtn">סיום וסיכום הזמנה</button></div></div>
+<div class="modal" id="modal"><div class="sheet" id="sheet"></div></div>
+<script>
+{
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const today=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0')};
+const dShow=s=>{const p=String(s).split('-');return p.length===3?(+p[2])+'.'+(+p[1])+'.'+p[0].slice(2):s};
+const num=v=>{if(v===''||v==null)return null;const n=parseFloat(String(v).replace(',','.'));return isFinite(n)?n:null};
+const fmt=n=>n==null?'—':String(+(+n).toFixed(2));
+const avg=a=>a.length?a.reduce((x,y)=>x+y,0)/a.length:null;
+const up4=x=>Math.ceil(x*4-1e-9)/4;
+
+let items=[],orders=[],draft={date:today(),lines:{}};
+let db=null,local=false,view='count',filter='all',q='',canWrite=true;
+
+/* ---------- storage ---------- */
+const LS=k=>{try{return JSON.parse(localStorage.getItem('arel_'+k))}catch(e){return null}};
+const LSset=(k,v)=>{try{localStorage.setItem('arel_'+k,JSON.stringify(v))}catch(e){}};
+let draftTimer=null,writing=false,again=false;
+function saveDraftSoon(){clearTimeout(draftTimer);draftTimer=setTimeout(saveDraft,700)}
+async function saveDraft(){
+  if(local){LSset('draft',draft);return}
+  if(!db||!canWrite)return;
+  if(writing){again=true;return}
+  writing=true;
+  try{await db.doc('app/draft').set(JSON.parse(JSON.stringify(draft)))}catch(e){writeErr(e)}
+  writing=false;if(again){again=false;saveDraft()}
+}
+async function saveItems(){
+  if(local){LSset('items',{items});render();return}
+  try{await db.doc('app/items').set({items:JSON.parse(JSON.stringify(items))})}catch(e){writeErr(e)}
+}
+async function addOrder(o){
+  if(local){const all=LS('orders')||[];o.id='o'+Date.now();all.push(o);LSset('orders',all);orders=all;return}
+  await db.collection('orders').doc('o'+Date.now()).set(o);
+}
+async function delOrder(id){
+  if(local){orders=orders.filter(o=>o.id!==id);LSset('orders',orders);render();return}
+  try{await db.doc('orders/'+id).delete()}catch(e){writeErr(e)}
+}
+function writeErr(e){
+  if(e&&e.code==='invalid_argument'){canWrite=false;toast('אין לך הרשאת עריכה בעמוד הזה — התצוגה לקריאה בלבד.')}
+  else if(e&&e.code==='quota_exceeded')toast('המאגר מלא. מחק הזמנות ישנות בלשונית היסטוריה.');
+  else toast('השמירה לא הצליחה, נסה שוב בעוד רגע.');
+}
+function toast(t){openModal(`<h2>שים לב</h2><p>${esc(t)}</p><div class="acts"><button class="btn" data-close>סגור</button></div>`)}
+
+/* ---------- logic ---------- */
+const L=id=>draft.lines[id]||(draft.lines[id]={});
+function sugg(it,stock){if(it.std==null||stock==null)return null;const s=it.std-stock;return s<=0?0:up4(s)}
+function ordOf(it){const l=draft.lines[it.id]||{};if(l.order!=null)return l.order;return sugg(it,l.stock)}
+function isOver(it){const l=draft.lines[it.id]||{},s=sugg(it,l.stock),o=ordOf(it);return s!=null&&o!=null&&o>s+1e-9}
+function stats(it){
+  const h=orders.slice().sort((a,b)=>a.date<b.date?-1:a.date>b.date?1:(a.ts||0)-(b.ts||0))
+    .map(o=>{const l=(o.lines||[]).find(x=>x.id===it.id);return l?{date:o.date,...l}:null}).filter(Boolean);
+  const os=h.filter(x=>x.order!=null);if(!os.length)return null;
+  let above=0,below=0;os.forEach(x=>{if(x.suggested==null)return;if(x.order>x.suggested+1e-9)above++;else if(x.order<x.suggested-1e-9)below++});
+  const cons=[];for(let i=1;i<h.length;i++){const a=h[i-1],b=h[i];if(a.stock!=null&&a.order!=null&&b.stock!=null){const c=a.stock+a.order-b.stock;if(c>=0)cons.push(c)}}
+  const lv=os.filter(x=>x.stock!=null).map(x=>x.stock+x.order);
+  return {n:os.length,avgOrder:avg(os.map(x=>x.order)),above,below,avgCons:avg(cons),consN:cons.length,avgLevel:avg(lv),last:os[os.length-1]};
+}
+function verdict(it,s){
+  if(!s||it.std==null||it.std<=0)return null;
+  const std=it.std,u=it.unit?' '+it.unit:'';
+  const hiLv=s.avgLevel!=null&&s.avgLevel>std*1.1,loLv=s.avgLevel!=null&&s.avgLevel<std*0.9;
+  const hiC=s.avgCons!=null&&s.avgCons>std,loC=s.avgCons!=null&&s.avgCons<std*0.5;
+  const ref=s.avgCons!=null?s.avgCons:s.avgLevel;const rec=ref!=null?Math.max(std<1?0.25:1,std<1?up4(ref):Math.ceil(ref-1e-9)):null;
+  let kind='ok',t=[];
+  if(hiLv||hiC){kind='over';
+    if(hiLv)t.push(`בממוצע אתה ממלא את המלאי ל-${fmt(s.avgLevel)}${u}, מעל התקן (${fmt(std)}). הזמנת מעל התקן ב-${s.above} מתוך ${s.n} הזמנות.`);
+    if(hiC)t.push(`לפי הצריכה: בין ספירה לספירה נצרכים בממוצע ${fmt(s.avgCons)}${u} — יותר מהתקן, ולכן המלאי עלול להיגמר.`);
+  }else if(loLv||loC){kind='under';
+    if(loLv)t.push(`בממוצע אתה ממלא את המלאי רק ל-${fmt(s.avgLevel)}${u}, מתחת לתקן (${fmt(std)}). הזמנת פחות מהתקן ב-${s.below} מתוך ${s.n} הזמנות.`);
+    if(loC)t.push(`לפי הצריכה: נצרכים בממוצע רק ${fmt(s.avgCons)}${u} בין ספירות — התקן כנראה גבוה מהצורך.`);
+  }else t.push(s.avgCons!=null?`ההזמנות תואמות את התקן. צריכה ממוצעת בין ספירות: ${fmt(s.avgCons)}${u}.`:'ההזמנות תואמות את התקן.');
+  return {kind,text:t.join(' '),rec:(kind!=='ok'&&rec!=null&&Math.abs(rec-std)>1e-9)?rec:null};
+}
+
+/* ---------- views ---------- */
+function vCount(){
+  if(!items.length)return `<div class="empty">אין עדיין פריטים. הוסף אותם בלשונית <a href="#items">פריטים ותקנים</a>.</div>`;
+  const ql=q.trim();
+  const list=items.filter(it=>{const l=draft.lines[it.id]||{},o=ordOf(it);
+    if(ql&&!it.name.includes(ql))return false;
+    if(filter==='order')return o>0;if(filter==='todo')return l.stock==null;if(filter==='over')return isOver(it);return true});
+  const counted=items.filter(it=>(draft.lines[it.id]||{}).stock!=null).length;
+  return `<div class="note">ספירה מתאריך ${dShow(draft.date)} · נספרו ${counted} מתוך ${items.length}. ממלאים את <b>יש</b> והאפליקציה מחשבת כמה <b>להזמין</b> לפי התקן. אפשר לשנות כמות ידנית.</div>
+  <div class="bar"><input class="search" id="q" placeholder="חיפוש פריט" value="${esc(q)}" autocomplete="off">
+  ${[['all','הכל'],['todo','לא נספרו'],['order','להזמנה'],['over','מעל התקן']].map(([k,t])=>`<button class="chip ${filter===k?'on':''}" data-f="${k}">${t}</button>`).join('')}</div>
+  ${list.map(rowHtml).join('')||'<div class="empty">אין פריטים שמתאימים לסינון.</div>'}`;
+}
+function rowHtml(it){
+  const l=draft.lines[it.id]||{},s=sugg(it,l.stock),o=ordOf(it),u=it.unit?' '+esc(it.unit):'';
+  const st=stats(it);let tags=[];
+  if(s!=null&&o!=null&&o>s+1e-9)tags.push(`<span class="pill over">מעל התקן ב-${fmt(o-s)}${l.ok===o?' · אושר':''}</span>`);
+  if(s!=null&&o!=null&&o<s-1e-9)tags.push(`<span class="pill under">פחות מהתקן ב-${fmt(s-o)}</span>`);
+  if(it.std==null)tags.push(`<span class="pill info">אין תקן — מלא כמות ידנית</span>`);
+  if(st)tags.push(`<span class="pill info">ממוצע הזמנה ${fmt(st.avgOrder)}${st.avgCons!=null?' · צריכה ~'+fmt(st.avgCons):''}</span>`);
+  return `<div class="row ${o>0?'has':''}" data-id="${it.id}"><div><div class="name">${esc(it.name)}</div>
+  <div class="meta">תקן: <b>${it.std==null?'—':fmt(it.std)}</b>${u}</div></div>
+  <div class="nums"><label class="f">יש<input inputmode="decimal" data-k="stock" value="${l.stock??''}" placeholder="?"></label>
+  <label class="f">להזמין<input class="ord" inputmode="decimal" data-k="order" value="${o==null?'':fmt(o)}" placeholder="—"></label></div>
+  ${tags.length?`<div class="tag">${tags.join('')}</div>`:''}</div>`;
+}
+function vTrends(){
+  const rows=items.map(it=>({it,s:stats(it)})).filter(x=>x.s);
+  if(!rows.length)return `<div class="empty">עוד אין הזמנות שמורות. אחרי שתשמור הזמנה או שתיים יופיעו כאן ממוצעים והשוואה לתקן.</div>`;
+  rows.forEach(x=>x.v=verdict(x.it,x.s));
+  const rank={over:0,under:1,ok:2};rows.sort((a,b)=>(rank[a.v?.kind]??3)-(rank[b.v?.kind]??3));
+  const nO=rows.filter(x=>x.v?.kind==='over').length,nU=rows.filter(x=>x.v?.kind==='under').length;
+  return `<div class="card"><div class="stats" style="margin:0"><div><b>${orders.length}</b>הזמנות שמורות</div><div><b style="color:var(--over)">${nO}</b>מעל התקן</div><div><b style="color:var(--under)">${nU}</b>מתחת לתקן</div><div><b>${rows.length-nO-nU}</b>תואמים</div></div></div>
+  ${rows.map(({it,s,v})=>{const u=it.unit?' '+esc(it.unit):'',mx=Math.max(it.std||0,s.avgLevel||0,s.avgCons||0)*1.15||1;
+    return `<div class="card"><h3>${esc(it.name)}</h3>
+    ${v?`<span class="pill ${v.kind==='ok'?'info':v.kind}">${v.kind==='over'?'מעל התקן':v.kind==='under'?'מתחת לתקן':'תואם תקן'}</span>`:''}
+    <div class="stats"><div><b>${fmt(it.std)}</b>תקן${u}</div><div><b>${fmt(s.avgOrder)}</b>ממוצע הזמנה</div><div><b>${fmt(s.avgLevel)}</b>מלאי אחרי הזמנה</div><div><b>${fmt(s.avgCons)}</b>צריכה ממוצעת</div></div>
+    ${it.std!=null&&s.avgLevel!=null?`<div class="meter"><i style="width:${Math.min(100,s.avgLevel/mx*100)}%"></i><s style="inset-inline-start:${Math.min(100,it.std/mx*100)}%"></s></div><div class="meta">פס צהוב: המלאי הממוצע אחרי הזמנה · קו: התקן</div>`:''}
+    <p style="margin:8px 0">${v?esc(v.text):''}</p>
+    ${v&&v.rec!=null?`<button class="btn sm" data-rec="${it.id}" data-v="${v.rec}">עדכן תקן ל-${fmt(v.rec)}</button>`:''}</div>`}).join('')}
+  <p class="meta">צריכה = מלאי בספירה הקודמת + מה שהוזמן − מלאי בספירה הנוכחית. צריך לפחות שתי ספירות כדי לחשב אותה.</p>`;
+}
+function vHistory(){
+  if(!orders.length)return `<div class="empty">עוד אין הזמנות שמורות.</div>`;
+  const os=orders.slice().sort((a,b)=>a.date<b.date?1:a.date>b.date?-1:(b.ts||0)-(a.ts||0));
+  return os.map(o=>{const ls=(o.lines||[]).filter(l=>l.order>0);const ov=ls.filter(l=>l.suggested!=null&&l.order>l.suggested+1e-9).length;
+    return `<details class="card"><summary><span class="big">${dShow(o.date)}</span><span class="meta">${ls.length} פריטים${ov?` · ${ov} מעל התקן`:''}</span></summary>
+    <table><thead><tr><th>פריט</th><th class="n">יש</th><th class="n">תקן</th><th class="n">הוזמן</th></tr></thead><tbody>
+    ${ls.map(l=>`<tr><td>${esc(l.name)}</td><td class="n">${fmt(l.stock)}</td><td class="n">${fmt(l.std)}</td><td class="n" style="${l.suggested!=null&&l.order>l.suggested+1e-9?'color:var(--over);font-weight:700':''}">${fmt(l.order)}</td></tr>`).join('')}
+    </tbody></table><div class="acts" style="display:flex;gap:8px;margin-top:10px"><button class="btn sm" data-copy="${o.id}">העתק טקסט הזמנה</button><button class="btn sm ghost" data-del="${o.id}">מחק</button></div></details>`}).join('');
+}
+function vItems(){
+  return `<div class="note">כאן משנים שם, תקן ויחידה. התקן הוא כמה צריך להיות במחסן אחרי הזמנה.</div>
+  ${items.map(it=>`<div class="edit" data-id="${it.id}"><input data-e="name" value="${esc(it.name)}" aria-label="שם"><input data-e="std" inputmode="decimal" value="${it.std??''}" placeholder="תקן" aria-label="תקן"><input class="u" data-e="unit" value="${esc(it.unit||'')}" placeholder="יחידה" aria-label="יחידה"><button class="x" data-rm="${it.id}" aria-label="מחק">✕</button></div>`).join('')}
+  <div class="acts" style="display:flex;gap:8px;margin-top:12px"><button class="btn" id="addItem">הוסף פריט</button></div>
+  <div class="card" style="margin-top:20px"><h3>גיבוי</h3><p class="meta">הנתונים נשמרים בטלפון הזה בלבד. כדאי להעתיק גיבוי מדי פעם ולשמור אותו בפתקים או בוואטסאפ לעצמך.</p>
+  <div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn sm" id="bkOut">העתק גיבוי</button><button class="btn sm ghost" id="bkIn">שחזר מגיבוי</button></div></div>`;
+}
+function render(){
+  view=(location.hash||'#count').slice(1);if(!['count','trends','history','items'].includes(view))view='count';
+  document.querySelectorAll('nav a').forEach(a=>a.classList.toggle('on',a.getAttribute('href')==='#'+view));
+  const ae=document.activeElement,keep=ae&&ae.id==='q'?ae.selectionStart:null;
+  $('#main').innerHTML=({count:vCount,trends:vTrends,history:vHistory,items:vItems}[view])();
+  if(keep!=null){const i=$('#q');i.focus();i.setSelectionRange(keep,keep)}
+  updBar();
+}
+function updBar(){const n=items.filter(it=>ordOf(it)>0).length;$('#cnt').textContent=n;$('#saveBar').hidden=view!=='count'||!items.length}
+function refreshRow(id){const it=items.find(x=>x.id===id),el=document.querySelector(`.row[data-id="${id}"]`);if(!it||!el)return;
+  const ae=document.activeElement,k=ae&&ae.dataset.k,pos=k?ae.selectionStart:null;
+  const t=document.createElement('div');t.innerHTML=rowHtml(it);const n=t.firstElementChild;
+  // keep the field being typed in untouched
+  if(k){const cur=n.querySelector(`[data-k="${k}"]`);cur.replaceWith(ae);}
+  el.replaceWith(n);if(k&&pos!=null){ae.focus();try{ae.setSelectionRange(pos,pos)}catch(e){}}
+  updBar()}
+
+/* ---------- modal ---------- */
+let onClose=null;
+function openModal(h,cb){$('#sheet').innerHTML=h;$('#modal').classList.add('on');onClose=cb||null}
+function closeModal(){$('#modal').classList.remove('on');const c=onClose;onClose=null;c&&c()}
+$('#modal').addEventListener('click',e=>{if(e.target.id==='modal'||e.target.closest('[data-close]'))closeModal()});
+
+function confirmOver(it,o,s){
+  const u=it.unit?' '+esc(it.unit):'';
+  openModal(`<h2>להזמין יותר מהתקן?</h2><p><b>${esc(it.name)}</b></p>
+  <p>לפי התקן צריך להזמין <b>${fmt(s)}</b>${u}. הזנת <b>${fmt(o)}</b> — יותר ב-${fmt(o-s)}.</p>
+  <div class="acts"><button class="btn" id="yes">כן, להזמין ${fmt(o)}</button><button class="btn ghost" id="no">לא, חזור ל-${fmt(s)}</button></div>`,()=>{if(L(it.id).ok!==o){L(it.id).order=null;delete L(it.id).ok;saveDraftSoon();refreshRow(it.id)}});
+  $('#yes').onclick=()=>{L(it.id).order=o;L(it.id).ok=o;saveDraftSoon();onClose=null;closeModal();refreshRow(it.id)};
+  $('#no').onclick=()=>closeModal();
+}
+function orderText(date,lines){return `הזמנה אר-אל ${dShow(date)}\n`+lines.filter(l=>l.order>0).map(l=>`• ${l.name} — ${fmt(l.order)}${l.unit?' '+l.unit:''}`).join('\n')}
+async function copyText(t){try{await navigator.clipboard.writeText(t);openModal(`<h2>הועתק</h2><p>טקסט ההזמנה הועתק. אפשר להדביק לספק בוואטסאפ או במייל.</p><div class="acts"><button class="btn" data-close>סגור</button></div>`)}
+  catch(e){openModal(`<h2>טקסט ההזמנה</h2><p class="meta">סמן והעתק:</p><textarea readonly>${esc(t)}</textarea><div class="acts"><button class="btn" data-close>סגור</button></div>`)}}
+
+function summary(){
+  const lines=items.map(it=>{const l=draft.lines[it.id]||{},s=sugg(it,l.stock),o=ordOf(it);return {id:it.id,name:it.name,unit:it.unit||'',std:it.std,stock:l.stock??null,suggested:s,order:o??null,ok:l.ok}});
+  const ord=lines.filter(l=>l.order>0);
+  if(!ord.length){toast('אין פריטים להזמנה. מלא כמה יש מכל פריט, או הזן כמות להזמין.');return}
+  const un=ord.filter(l=>l.suggested!=null&&l.order>l.suggested+1e-9&&l.ok!==l.order);
+  const show=()=>openModal(`<h2>סיכום הזמנה · ${dShow(draft.date)}</h2>
+    <table><thead><tr><th>פריט</th><th class="n">כמות</th></tr></thead><tbody>${ord.map(l=>`<tr><td>${esc(l.name)}</td><td class="n" style="${l.suggested!=null&&l.order>l.suggested+1e-9?'color:var(--over);font-weight:700':''}">${fmt(l.order)}${l.unit?' '+esc(l.unit):''}</td></tr>`).join('')}</tbody></table>
+    <div class="acts"><button class="btn" id="doSave">שמור הזמנה</button><button class="btn ghost" id="doCopy">העתק טקסט</button><button class="btn ghost" data-close>חזור לעריכה</button></div>`);
+  const bind=()=>{
+    $('#doCopy').onclick=()=>copyText(orderText(draft.date,ord));
+    $('#doSave').onclick=async()=>{
+      if(!local&&!canWrite){toast('אין הרשאת שמירה.');return}
+      const o={date:draft.date,ts:Date.now(),lines:lines.filter(l=>l.stock!=null||l.order!=null).map(({ok,...r})=>r)};
+      try{await addOrder(o)}catch(e){writeErr(e);return}
+      draft={date:today(),lines:{}};clearTimeout(draftTimer);await saveDraft();onClose=null;closeModal();
+      openModal(`<h2>ההזמנה נשמרה</h2><p>${ord.length} פריטים נשמרו בהיסטוריה. הספירה הבאה תתחיל ריקה, והממוצעים יתעדכנו.</p><div class="acts"><button class="btn" id="cp2">העתק טקסט לספק</button><button class="btn ghost" data-close>סגור</button></div>`);
+      $('#cp2').onclick=()=>copyText(orderText(o.date,ord));render()};
+  };
+  if(un.length){
+    openModal(`<h2>${un.length} פריטים מעל התקן</h2><p>לוודא שאתה רוצה להזמין יותר:</p>
+    <table><thead><tr><th>פריט</th><th class="n">לפי תקן</th><th class="n">הזנת</th></tr></thead><tbody>${un.map(l=>`<tr><td>${esc(l.name)}</td><td class="n">${fmt(l.suggested)}</td><td class="n" style="color:var(--over);font-weight:700">${fmt(l.order)}</td></tr>`).join('')}</tbody></table>
+    <div class="acts"><button class="btn" id="okAll">כן, אני רוצה יותר</button><button class="btn ghost" id="fixAll">החזר הכל לתקן</button></div>`);
+    $('#okAll').onclick=()=>{un.forEach(l=>{L(l.id).ok=l.order;l.ok=l.order});saveDraftSoon();show();bind()};
+    $('#fixAll').onclick=()=>{un.forEach(l=>{L(l.id).order=null;delete L(l.id).ok});saveDraftSoon();closeModal();render()};
+  }else{show();bind()}
+}
+
+/* ---------- events ---------- */
+$('#main').addEventListener('input',e=>{
+  const t=e.target;
+  if(t.id==='q'){q=t.value;render();return}
+  const row=t.closest('.row');
+  if(row&&t.dataset.k==='stock'){const l=L(row.dataset.id);l.stock=num(t.value);saveDraftSoon();refreshRow(row.dataset.id)}
+});
+$('#main').addEventListener('change',e=>{
+  const t=e.target,row=t.closest('.row');
+  if(row&&t.dataset.k==='order'){const it=items.find(x=>x.id===row.dataset.id),l=L(it.id),v=num(t.value),s=sugg(it,l.stock);
+    l.order=v;if(v==null)delete l.ok;saveDraftSoon();
+    if(v!=null&&s!=null&&v>s+1e-9&&l.ok!==v)confirmOver(it,v,s);else refreshRow(it.id);return}
+  const ed=t.closest('.edit');
+  if(ed){const it=items.find(x=>x.id===ed.dataset.id),k=t.dataset.e;it[k]=k==='std'?num(t.value):t.value.trim();saveItems()}
+});
+$('#main').addEventListener('click',e=>{
+  const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.f){filter=b.dataset.f;render()}
+  else if(b.dataset.rec){const it=items.find(x=>x.id===b.dataset.rec);it.std=+b.dataset.v;saveItems();render()}
+  else if(b.dataset.copy){const o=orders.find(x=>x.id===b.dataset.copy);copyText(orderText(o.date,o.lines))}
+  else if(b.dataset.del){const id=b.dataset.del;openModal(`<h2>למחוק את ההזמנה?</h2><p>היא תוסר גם מחישוב הממוצעים.</p><div class="acts"><button class="btn" id="yd">מחק</button><button class="btn ghost" data-close>ביטול</button></div>`);$('#yd').onclick=()=>{closeModal();delOrder(id)}}
+  else if(b.dataset.rm){const id=b.dataset.rm,it=items.find(x=>x.id===id);openModal(`<h2>למחוק פריט?</h2><p>${esc(it.name)}</p><div class="acts"><button class="btn" id="yr">מחק</button><button class="btn ghost" data-close>ביטול</button></div>`);$('#yr').onclick=()=>{items=items.filter(x=>x.id!==id);closeModal();saveItems()}}
+  else if(b.id==='bkOut'){copyText(JSON.stringify({v:1,items,orders,draft}))}
+  else if(b.id==='bkIn'){openModal(`<h2>שחזור מגיבוי</h2><p class="meta">הדבק כאן את טקסט הגיבוי. הנתונים הנוכחיים יוחלפו.</p><textarea id="bkTxt"></textarea><div class="acts"><button class="btn" id="bkGo">שחזר</button><button class="btn ghost" data-close>ביטול</button></div>`);
+    $('#bkGo').onclick=()=>{try{const d=JSON.parse($('#bkTxt').value);if(!Array.isArray(d.items))throw 0;items=d.items;orders=d.orders||[];draft=d.draft||{date:today(),lines:{}};LSset('items',{items});LSset('orders',orders);LSset('draft',draft);closeModal();render()}catch(e){$('#bkTxt').style.borderColor='var(--over)'}}}
+  else if(b.id==='addItem'){items.push({id:'n'+Date.now(),name:'פריט חדש',std:1,unit:''});saveItems();render();const r=[...document.querySelectorAll('.edit input[data-e=name]')].pop();r&&(r.focus(),r.select())}
+});
+$('#saveBtn').addEventListener('click',summary);
+window.addEventListener('hashchange',render);
+
+/* ---------- boot ---------- */
+const DEFAULT_ITEMS=[{"id": "i01", "name": "L כפפות ניטריל שחור ללא אבקה (1 יח')", "std": 12.0, "unit": ""}, {"id": "i02", "name": "אבקת כלור 10 ק\"ג פרו 130(10 יח')", "std": 1.0, "unit": ""}, {"id": "i03", "name": "אקונומיקה 4 ליטר(1 ארגז = 4 יח')", "std": 10.0, "unit": ""}, {"id": "i04", "name": "אשפה אפור 110/120/05(1 ארגז)", "std": 8.0, "unit": ""}, {"id": "i05", "name": "גביע 500 אלגנט טדניר (1 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i06", "name": "גביע רוטב 100+מכסה צמוד עגול א 752(1 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i07", "name": "גופיה בינוני שחור(24 ק”ג)", "std": 10.0, "unit": ""}, {"id": "i08", "name": "גליל מדבקות למדפסת 47/75 א-72/500 גלילים(1 יח')", "std": 30.0, "unit": ""}, {"id": "i09", "name": "גלילי נייר תרמי למדפסת", "std": 30.0, "unit": ""}, {"id": "i10", "name": "דבק 12/66 אדום(1 יח')", "std": 5.0, "unit": ""}, {"id": "i11", "name": "דפי בד פוליש דיווה 20/30 א-2000(1 יח')", "std": 8.0, "unit": ""}, {"id": "i12", "name": "דפי בד פוליש דיווה 30/40 א-1000(1 יח')", "std": 8.0, "unit": ""}, {"id": "i13", "name": "דפי הפרדה פרגפלסט(1 יח')", "std": 1.0, "unit": ""}, {"id": "i14", "name": "הדסון-שקית נייר לבנה א-200(1 יח')", "std": 2.0, "unit": ""}, {"id": "i15", "name": "יוניברס מטליות ורודות - 250 יחידות(1 ארגז)", "std": 1.0, "unit": "חבילה"}, {"id": "i16", "name": "כוס נייר 8 הדפס כללי 1000 יחידות(1000 יח')", "std": 0.5, "unit": "ארגז"}, {"id": "i17", "name": "כוס פלסטיק 180 מ\"ל(3000 יח')", "std": 0.5, "unit": "ארגז"}, {"id": "i18", "name": "כפות קשיח שחור(1 יח')", "std": 4.0, "unit": ""}, {"id": "i19", "name": "כפפות מולטיטקס שחור ללא אבקה M(1 יח')", "std": 12.0, "unit": ""}, {"id": "i20", "name": "מברשת שרובר לקירצוף(1 יח')", "std": 1.0, "unit": ""}, {"id": "i21", "name": "מגב 40 ס\"מ פלסטיק(1 יח')", "std": 2.0, "unit": ""}, {"id": "i22", "name": "מטאטא(1 יח')", "std": 2.0, "unit": ""}, {"id": "i23", "name": "מטהר אוויר אוטו' קוקוס וניל(1 יח')", "std": 1.0, "unit": ""}, {"id": "i24", "name": "מטלית זיג זג סחבות רצפה(60 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i25", "name": "מיכל 1 ליטר שחור - א-135(135 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i26", "name": "מיכל 2.5 ליטר א-100 יחידות(100 יח')", "std": 0.5, "unit": "חבילה"}, {"id": "i27", "name": "מיכל 4.5 ליטר א-100 יחידות(100 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i28", "name": "מיכל יונתן 250 א-300(1 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i29", "name": "מיכל לרוטב 50 מ\"ל צמוד מכסה קטן(1 ארגז = 1000 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i30", "name": "מילוי מטליות לדלי -בקרטון(4 יח')", "std": 6.0, "unit": "ארגז"}, {"id": "i31", "name": "מכסה 1-2 מלבני שקוף - 405 יחידות(405 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i32", "name": "מכסה 500 עגול אלגנט + ריפ (1 יח')", "std": 6.0, "unit": "שרוול"}, {"id": "i33", "name": "מכסה חם לקערה 1500 קרפט א-600(600 יח')", "std": 3.0, "unit": "שרוול"}, {"id": "i34", "name": "מכסה חם לקערה 500/750 קרפט קוטר 150 א-300(1 יח')", "std": 10.0, "unit": ""}, {"id": "i35", "name": "מכסה מיכלים 4.5-2.5 א-200 יחידות(200 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i36", "name": "מלח גבישי(25 ק”ג)", "std": 3.0, "unit": ""}, {"id": "i37", "name": "ממרוקית ברזל 50 גר' א- 12(12 יח')", "std": 2.0, "unit": "חבילה"}, {"id": "i38", "name": "מפיות 40/40 לבן 2000 יח' קיפול ספר(1 ארגז = 2000 יח')", "std": null, "unit": ""}, {"id": "i39", "name": "מפיות צץ רץ טבעי-שניב - (4000 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i40", "name": "מפיות קוקטייל 5000 יחידות(1 ארגז)", "std": 1.0, "unit": "ארגז"}, {"id": "i41", "name": "מקל עץ למטאטא 1.5 + הברגה(1 יח')", "std": 1.0, "unit": ""}, {"id": "i42", "name": "משחת כלים פרו 500 18 ליטר(18 ל')", "std": 2.0, "unit": ""}, {"id": "i43", "name": "נוזל חלונות פרו 103 4 ליטר(4 יח')", "std": 6.0, "unit": ""}, {"id": "i44", "name": "נוזל כלים 12% - 4ליטר פרו 105(4 יח')", "std": 4.0, "unit": ""}, {"id": "i45", "name": "נוזל מבושם לשטיפת פרקט(2 ל')", "std": 2.0, "unit": ""}, {"id": "i46", "name": "נוזל מסיר שומן 4 ליטר פרו 109(4 יח')", "std": 6.0, "unit": ""}, {"id": "i47", "name": "נוזל עדין לידיים פרו 200 4 ליטר(4 יח')", "std": 2.0, "unit": ""}, {"id": "i48", "name": "נוזל רצפות מבושם 4 ליטר פרו 100(4 יח')", "std": 2.0, "unit": ""}, {"id": "i49", "name": "נייר אפיה 33/52 א-1000(1 יח')", "std": 1.0, "unit": ""}, {"id": "i50", "name": "נייר טואלט גלילים חוגלה 610(32 יח')", "std": 5.0, "unit": ""}, {"id": "i51", "name": "נייר תעשייתי", "std": 20.0, "unit": ""}, {"id": "i52", "name": "נייר פרגמנט 40/40 חום א-1000(1 יח')", "std": 2.0, "unit": ""}, {"id": "i53", "name": "נייר פרגמנט אלומיניום כוורת 35/40 א-1000(1 יח')", "std": 1.0, "unit": ""}, {"id": "i54", "name": "סבון קצץ לידיים ורוד 5701 1/6(1 יח')", "std": 4.0, "unit": ""}, {"id": "i55", "name": "סינר ניילון עובי 100 - 0.4 יחידות(1 יח')", "std": 1.0, "unit": ""}, {"id": "i56", "name": "ספוג יפני(36 יח')", "std": 1.0, "unit": "חבילה"}, {"id": "i57", "name": "צלופן הפרדה 5ק\"ג(5 יח')", "std": 1.0, "unit": ""}, {"id": "i58", "name": "צמודית 45 פירות - ניילון נצמד(1 יח')", "std": 8.0, "unit": ""}, {"id": "i59", "name": "קופסא ביו 1 קרפט חום פייפר א-405(1 יח')", "std": 2.0, "unit": "שרוול"}, {"id": "i60", "name": "קיסם מעטפה לבן א-500(1 ארגז)", "std": 5.0, "unit": ""}, {"id": "i61", "name": "קערה 1500 קרפט (600 יח)(600 יח')", "std": 3.0, "unit": "שרוול"}, {"id": "i62", "name": "קערה 500 קרפט דאבל קוטר(1 יח')", "std": 10.0, "unit": "שרוול"}, {"id": "i63", "name": "קרטוניה טורטיה א-400(1 יח')", "std": 1.0, "unit": "שרוול"}, {"id": "i64", "name": "קש נייר 8 מ\"מ חום א-5000(1 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i65", "name": "רדיד אלומיניום 45 רוחב 50 מטר(1 יח')", "std": 4.0, "unit": ""}, {"id": "i66", "name": "רדיד אלומיניום צץ רץ 22.8/27.3 500 דף(1 יח')", "std": 6.0, "unit": ""}, {"id": "i67", "name": "שפריצר מתז מקצועי שקוף 800 מ\"ל(1 יח')", "std": 3.0, "unit": ""}, {"id": "i68", "name": "שק זילוף ח\"פ א-100(1 יח')", "std": 1.0, "unit": ""}, {"id": "i69", "name": "שקיות 20/30 ניילון(30 יח')", "std": 5.0, "unit": ""}, {"id": "i70", "name": "שקיות אשפה שחורות 20 גלילים(500 יח')", "std": 1.0, "unit": "ארגז"}, {"id": "i71", "name": "תרסיס לניקוי והברקת נירוסטה 500 מ\"ל(1 יח')", "std": 1.0, "unit": ""}];
+local=true;{const i=LS('items');items=i&&Array.isArray(i.items)?i.items:DEFAULT_ITEMS.map(x=>({...x}));if(!i)LSset('items',{items});}
+orders=LS('orders')||[];draft=LS('draft')||draft;
+if(!Object.keys(draft.lines||{}).length)draft.date=today();
+render();
+if('serviceWorker' in navigator)navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+</script>
+</body>
+</html>
